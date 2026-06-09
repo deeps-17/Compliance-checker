@@ -1,0 +1,19 @@
+# Environment variables and API keys
+.env
+
+# Project context/brief document
+project_brief.md
+implementation_plan.md
+
+# Python cache and temporary files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+
+# Virtual environment
+venv/
+.venv/
+env/
+ENV/
