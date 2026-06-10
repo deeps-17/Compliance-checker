@@ -70,7 +70,7 @@ compliance-checker/
 
 ## How It Works
 
-The tool sends the full privacy policy and the full DPDP Act text in a single structured prompt to Gemini 2.0 Flash, using the model's large context window rather than chunking. This gives the model global visibility over both documents, avoiding false negatives that occur when evaluating isolated sections.
+The tool sends the full privacy policy and the full DPDP Act text in a single structured prompt to Gemini 3.5 Flash, using the model's large context window rather than chunking. This gives the model global visibility over both documents, avoiding false negatives that occur when evaluating isolated sections.
 
 Gemini returns a guaranteed JSON response via a strict response schema, which is parsed and rendered as a scorecard in the Streamlit UI.
 
