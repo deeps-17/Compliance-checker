@@ -1,14 +1,16 @@
 # DPDP Act Compliance Checker
 
-A web-based tool that evaluates an organization's privacy policy against India's Digital Personal Data Protection (DPDP) Act 2023 and generates a structured compliance report.
+A web-based tool that evaluates an organization's privacy policy against India's Digital Personal Data Protection (DPDP) Act 2023 and generates a structured, pillar-by-pillar compliance report.
+
+Live app: https://compliance-checker00.streamlit.app
 
 ---
 
 ## What It Does
 
-The tool takes any privacy policy as input — either pasted as text or uploaded as a PDF or TXT file — and evaluates it against the 7 key compliance pillars of the DPDP Act 2023. It returns a pillar-by-pillar scorecard with quoted evidence from the policy, a Pass / Partial / Fail status for each pillar, and an overall compliance score.
+The tool takes any privacy policy as input — either pasted as text or uploaded as a PDF or TXT file — and evaluates it against the 7 key compliance pillars of the DPDP Act 2023. It returns a pillar-by-pillar scorecard with quoted evidence from the policy, a Pass / Partial / Fail status for each pillar, an overall compliance score, and a downloadable Markdown report.
 
-This is a readiness assessment tool, not a legal audit. Results indicate where an organization stands ahead of the May 2027 full enforcement deadline, not whether they are currently in violation.
+This is a readiness assessment tool, not a legal audit. Results indicate where an organization stands ahead of the May 2027 full enforcement deadline under the DPDP Rules 2025, not whether they are currently in violation.
 
 ---
 
@@ -32,7 +34,9 @@ This is a readiness assessment tool, not a legal audit. Results indicate where a
 - Streamlit — frontend UI
 - Gemini 2.0 Flash API — evaluation engine
 - PyMuPDF — PDF text extraction
-- python-dotenv — environment variable management
+- python-dotenv — local environment variable management
+- Docker — containerization
+- GitHub Actions — CI pipeline
 
 ---
 
@@ -41,23 +45,38 @@ This is a readiness assessment tool, not a legal audit. Results indicate where a
 ```
 compliance-checker/
 |
+|-- .github/
+|   |-- workflows/
+|       |-- ci.yml              # GitHub Actions CI pipeline
+|
 |-- data/
-|   |-- dpdp-act.txt          # Full text of the DPDP Act 2023
+|   |-- dpdp-act.txt            # Full text of the DPDP Act 2023
 |
 |-- src/
-|   |-- chunker.py            # Text extraction and cleaning
-|   |-- evaluator.py          # Core Gemini API evaluation logic
-|   |-- report.py             # JSON response parsing for UI display
+|   |-- chunker.py              # Text extraction and cleaning
+|   |-- evaluator.py            # Core Gemini API evaluation logic
+|   |-- report.py               # JSON response parsing for UI display
 |
-|-- app.py                    # Streamlit application
-|-- requirements.txt          # Dependencies
-|-- .env                      # API key (not committed)
+|-- app.py                      # Streamlit application
+|-- Dockerfile                  # Container definition
+|-- .dockerignore
+|-- requirements.txt
+|-- .env                        # API key (not committed)
 |-- .gitignore
+|-- README.md
 ```
 
 ---
 
-## Setup and Installation
+## How It Works
+
+The tool sends the full privacy policy and the full DPDP Act text in a single structured prompt to Gemini 3.5 Flash, using the model's large context window rather than chunking. This gives the model global visibility over both documents, avoiding false negatives that occur when evaluating isolated sections.
+
+Gemini returns a guaranteed JSON response via a strict response schema, which is parsed and rendered as a scorecard in the Streamlit UI.
+
+---
+
+## Local Setup
 
 ### 1. Clone the repository
 
@@ -96,17 +115,47 @@ streamlit run app.py
 
 ---
 
-## How It Works
+## Running with Docker
 
-The tool sends the full privacy policy and the full DPDP Act text in a single structured prompt to Gemini 2.0 Flash, using the model's large context window rather than chunking. This gives the model global visibility over both documents, avoiding false negatives that occur when evaluating isolated sections.
+### Build the image
 
-Gemini returns a guaranteed JSON response via structured output schema, which is parsed and rendered as a scorecard in the UI.
+```bash
+docker build -t compliance-checker .
+```
+
+### Run the container
+
+```bash
+docker run -p 8501:8501 -e GEMINI_API_KEY=your_api_key_here compliance-checker
+```
+
+Then open `http://localhost:8501` in your browser.
+
+---
+
+## CI Pipeline
+
+Every push to `main` triggers a GitHub Actions workflow that:
+
+- Installs all dependencies
+- Checks for syntax errors across all Python files
+- Builds the Docker image to confirm it compiles correctly
+
+---
+
+## Deployment
+
+The app is deployed on Streamlit Community Cloud and is publicly accessible at:
+
+https://compliance-checker00.streamlit.app
+
+API keys are managed via Streamlit Secrets and are never stored in the codebase or Docker image.
 
 ---
 
 ## Usage
 
-1. Open the app in your browser after running the Streamlit command
+1. Open the app
 2. Paste the privacy policy text directly, or upload a PDF or TXT file
 3. Click "Analyse Policy"
 4. Review the pillar-by-pillar breakdown with evidence and status badges
